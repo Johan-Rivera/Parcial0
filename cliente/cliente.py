@@ -14,6 +14,7 @@ ip = socket.gethostbyname(socket.gethostname())
 puerto = 8000
 
 nodos = []
+lista_numeros = []
 lock = threading.Lock()
 
 def notificar_nuevo_cliente(nodo):
@@ -34,10 +35,18 @@ def notificar_cliente_desconectado(ip_saliente, lista_nodos):
         print("Nodos:", nodos)
     return True
 
+def recibir_numeros(numeros):
+    global lista_numeros
+    with lock:
+        lista_numeros = numeros
+        print(f"\nEl indexador me repartio los numeros: {lista_numeros}")
+    return True
+
 def escuchar():
     with SimpleXMLRPCServer((ip, puerto), requestHandler=RequestHandler) as servidor:
         servidor.register_function(notificar_nuevo_cliente)
         servidor.register_function(notificar_cliente_desconectado)
+        servidor.register_function(recibir_numeros)
         servidor.serve_forever()
 
 def registrarse():
