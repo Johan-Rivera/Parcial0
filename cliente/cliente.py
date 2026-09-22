@@ -106,26 +106,32 @@ def negociar():
 
     print(f"Negociando con {len(nodos)} clientes en la red...")
 
-    for n in nodos:
-        try:
-            cliente = ServerProxy(f"http://{n['ip']}:{n['puerto']}/RPC2")
+    hubo_intercambio = True
 
-            with lock:
-                actualizar_derivadas()
-                respuesta = cliente.negociar_numeros(faltantes, repetidos)
+    while hubo_intercambio and faltantes:
+        hubo_intercambio = False
 
-            if respuesta["estado"] == "ok" and respuesta["recibir"] is not None:
+        for n in nodos:
+            try:
+                cliente = ServerProxy(f"http://{n['ip']}:{n['puerto']}/RPC2")
+
                 with lock:
-                    lista_numeros.append(respuesta["recibir"])
-                    if lista_numeros.count(respuesta["entregar"]) > 1:
-                        lista_numeros.remove(respuesta["entregar"])
                     actualizar_derivadas()
-                print(f"\nIntercambio con {n['ip']}: recibi {respuesta['recibir']}, entregue {respuesta['entregar']}.")
-                mostrar_numeros()
-            else:
-                print(f"\nSin intercambio posible con {n['ip']}.")
-        except Exception as e:
-            print(f"Error negociando con {n['ip']}: {e}")
+                    respuesta = cliente.negociar_numeros(faltantes, repetidos)
+
+                if respuesta["estado"] == "ok" and respuesta["recibir"] is not None:
+                    with lock:
+                        lista_numeros.append(respuesta["recibir"])
+                        if lista_numeros.count(respuesta["entregar"]) > 1:
+                            lista_numeros.remove(respuesta["entregar"])
+                        actualizar_derivadas()
+                    print(f"\nIntercambio con {n['ip']}: recibi {respuesta['recibir']}, entregue {respuesta['entregar']}.")
+                    mostrar_numeros()
+                    hubo_intercambio = True
+                else:
+                    print(f"\nSin intercambio posible con {n['ip']}.")
+            except Exception as e:
+                print(f"Error negociando con {n['ip']}: {e}")
 
     if not faltantes:
         print("Colección completa!")
@@ -155,6 +161,12 @@ def chat():
 
         if comando == "negociar":
             negociar()
+        elif comando == "clear":
+            print("\033[2J\033[H", end="")
+        elif comando == "salir":
+            desconectarse()
+            print("Cliente desconectado.")
+            break
         else:
             print("Comando desconocido.")
 

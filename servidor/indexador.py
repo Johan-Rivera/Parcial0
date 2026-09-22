@@ -93,7 +93,12 @@ def chat():
 
         if comando == "repartir":
             repartir_numeros()
-        elif comando:
+        elif comando == "clear":
+            print("\033[2J\033[H", end="")
+        elif comando == "salir":
+            print("Indexador apagado.")
+            break
+        else:
             print("Comando desconocido.")
 
 if __name__ == '__main__':
